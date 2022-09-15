@@ -66,29 +66,6 @@ namespace PageParser.SiteParser
             return document;
         }
 
-        //public List<string> GetFirstLayerCarsData(IDocument document)
-        //{
-        //    List<CarModel> carModelList = new List<CarModel>();
-        //    List<string> hyperlinkList = new List<string>();
-
-        //    var elements = document.All.Where(m => m.LocalName == "div" &&
-        //                             m.HasAttribute("class") &&
-        //                             m.GetAttribute("class").StartsWith("id")).ToList();
-
-        //    foreach (IElement el in elements)
-        //    {
-        //        var carModel = new CarModel();
-
-        //        carModel.SecondLayerDataUrl = el.InnerHtml;
-
-        //        hyperlinkList.Add(el.InnerHtml);
-
-        //        carModel.Id = el.TextContent;
-        //    }
-
-        //    return hyperlinkList;
-        //}
-
         /// <summary>
         /// Получает все родительские html элементы с домашней страницы, которые содержат данные и ссылку на варианты модели машины.
         /// </summary>
@@ -162,7 +139,9 @@ namespace PageParser.SiteParser
                                 el.GetAttribute("class").StartsWith("id") &&
                                 el.Children.Any(chEl => chEl.LocalName == "a" &&
                                 chEl.HasAttribute("href"))).FirstOrDefault();
-            var result = nodeWithURL.GetAttribute("href");
+            var strNode = nodeWithURL.ToString();
+
+            
 
             return null;
         }
@@ -226,12 +205,6 @@ namespace PageParser.SiteParser
             car.FinishDate = dataTimeList[1];
 
             return car;
-        }
-
-        public DateTime? FormateDate(string rawData)
-        {
-
-            return null;
         }
 
         /// <summary>
