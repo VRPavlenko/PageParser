@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Html.Parser;
+using PageParser.Models;
 using PageParser.SiteParser;
 
 namespace PageParser
@@ -24,11 +26,15 @@ namespace PageParser
             //customParser.GetFirstLayerCarsData(document);
 
             var allParentDivs = customParser.GetParentCarDivElementsList(document);
-            var childNodes = await customParser.GetChildCarNodes(allParentDivs[1]);
 
-            await customParser.CreateCarEntitysFromParentNode(childNodes[0]);
+            List<CarEntity> allCars = new List<CarEntity>();
             
+            foreach(var pn in allParentDivs)
+            {
+                allCars.AddRange(await customParser.CreateCarEntitysFromParentNode(pn));
+            }
 
+            
 
             Console.ReadKey();
         }

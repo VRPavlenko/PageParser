@@ -146,42 +146,39 @@ namespace PageParser.SiteParser
 
                 carEntity = await GetModelDataToCarEntity(carEntity, el); // get model data
 
-
+                carEntity.SecondLayerDataUrl = await GetSecondLvlUrl(el);
 
                 carEntities.Add(carEntity);
             }
             return carEntities;
         }
 
-        //public string GetSecondLayerDataUrl(IElement childElement)
-        //{
-        //    string temp = childElement.InnerHtml;
-        //    int start = 0;
-        //    int finish = 0;
-        //    for (int i = 0; i < temp.Length; i++)
-        //    {
-        //        var start = "href=";
-        //        for(int j = 0; j < temp.Length; j++)
-        //        {
-        //            if()
-        //        }
-        //    }
 
-        //    return null;
-        //}
+        public async Task<string> GetSecondLvlUrl(IElement childElement)
+        {
+            var childNode = await GetDocumentFromElement(childElement);
+            var nodeWithURL = childNode.All.Where(el => el.LocalName == "div" &&
+                                el.HasAttribute("class") &&
+                                el.GetAttribute("class").StartsWith("id") &&
+                                el.Children.Any(chEl => chEl.LocalName == "a" &&
+                                chEl.HasAttribute("href"))).FirstOrDefault();
+            var result = nodeWithURL.GetAttribute("href");
 
-
+            return null;
+        }
         /// <summary>
         /// Возвращаем имя из родительского елемента
         /// </summary>
-        public async Task<string> GetModelId(IElement childElement)
+            public async Task<string> GetModelId(IElement childElement)
         {
             var childNode = await GetDocumentFromElement(childElement);
             var nodeWithName = childNode.All.Where(el => el.LocalName == "div" &&
                                 el.HasAttribute("class") &&
-                                el.GetAttribute("class").StartsWith("id")).FirstOrDefault();
+                                el.GetAttribute("class").StartsWith("id") &&
+                                el.Children.Any(chEl => chEl.LocalName == "a" &&
+                                chEl.HasAttribute("href"))).FirstOrDefault();
 
-            var result = nodeWithName.InnerHtml;
+            var result = nodeWithName.TextContent;
 
             return result;
         }
@@ -191,11 +188,10 @@ namespace PageParser.SiteParser
         /// </summary>
         public async Task<string> GetModelName(IElement parentElement)
         {
-            var childNode = await GetDocumentFromElement(parentElement);
-            var nodeWithName = childNode.All.Where(el => el.LocalName == "div" &&
-                                el.HasAttribute("class") &&
-                                el.GetAttribute("class").StartsWith("name")).FirstOrDefault();
-
+            var parentNode = await GetDocumentFromElement(parentElement);
+            var nodeWithName = parentNode.All.Where(el => el.LocalName == "div" &&
+                                                   el.HasAttribute("class") &&
+                                                   el.GetAttribute("class").StartsWith("name")).FirstOrDefault();
             var result = nodeWithName.InnerHtml;
 
             return result;
@@ -212,13 +208,16 @@ namespace PageParser.SiteParser
                                 el.GetAttribute("class").StartsWith("dateRange")).FirstOrDefault();
 
             var strData = nodeWithData.InnerHtml;
-            strData = strData.Replace(",", "/");
-            var dataStrList = strData.Split("&nbsp;-&nbsp;");
+            strData = strData.Replace("&nbsp;", " ");
+            var dataStrList = strData.Split(" - ");
             List<DateTime?> dataTimeList = new List<DateTime?>();
             foreach(string data in dataStrList)
             {
                 if (data != "...")
-                    dataTimeList.Add(Convert.ToDateTime(data));
+                {
+                    var date = Convert.ToDateTime(data.Replace(".", "/"));
+                    dataTimeList.Add(date);
+                }
                 else
                     dataTimeList.Add(null);
             }
@@ -229,7 +228,11 @@ namespace PageParser.SiteParser
             return car;
         }
 
+        public DateTime? FormateDate(string rawData)
+        {
 
+            return null;
+        }
 
         /// <summary>
         /// Возвращает коды моделей из одного дочернего элемента модели машины.
