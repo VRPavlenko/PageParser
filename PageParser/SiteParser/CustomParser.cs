@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 using AngleSharp.Html.Parser;
 using System.Collections.Generic;
 using System.IO;
@@ -139,11 +140,21 @@ namespace PageParser.SiteParser
                                 el.GetAttribute("class").StartsWith("id") &&
                                 el.Children.Any(chEl => chEl.LocalName == "a" &&
                                 chEl.HasAttribute("href"))).FirstOrDefault();
-            var strNode = nodeWithURL.ToString();
+            var strNode = nodeWithURL.InnerHtml;
 
-            
+            strNode = strNode.Split("f=\"")[1];
+            strNode = strNode.Split("\" t")[0];
 
-            return null;
+            /*
+            foreach(char ch in strNode)
+            {
+                bool match
+                
+            }
+            */
+
+
+            return "https://www.ilcats.ru/" + strNode;
         }
         /// <summary>
         /// Возвращаем имя из родительского елемента
@@ -192,7 +203,7 @@ namespace PageParser.SiteParser
             List<DateTime?> dataTimeList = new List<DateTime?>();
             foreach(string data in dataStrList)
             {
-                if (data != "...")
+                if (data != "   ...   ")
                 {
                     var date = Convert.ToDateTime(data.Replace(".", "/"));
                     dataTimeList.Add(date);
