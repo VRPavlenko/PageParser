@@ -138,7 +138,7 @@ namespace PageParser.SiteParser
             {
                 var carEntity = new CarEntity();
 
-                carEntity.Name = await GetModelName(parentElement); // get model name
+                var temp = await GetModelName(parentElement); // get model name
 
                 carEntity.Codes = await GetModelCodes(el); //get modelCodes
 
@@ -189,14 +189,23 @@ namespace PageParser.SiteParser
         /// <summary>
         /// Возвращаем имя из родительского елемента
         /// </summary>
-        public async Task<string> GetModelName(IElement parentElement)
+        public async Task<List<IElement>> GetModelName(IElement parentElement)
         {
             var childNode = await GetDocumentFromElement(parentElement);
             var nodeWithName = childNode.All.Where(el => el.LocalName == "div" &&
-                                el.HasAttribute("class") &&
-                                el.GetAttribute("class").StartsWith("name")).FirstOrDefault();
+                                                   el.HasAttribute("class") &&
+                                                   el.GetAttribute("class").StartsWith("Header") &&
+                                                   el.Children.Any(chEl => chEl.LocalName == "div" &&
+                                                   chEl.HasAttribute("class") &&
+                                                   chEl.GetAttribute("class").StartsWith("name")));
 
-            var result = nodeWithName.InnerHtml;
+            //                                            (el => el.LocalName == "div" &&
+            //                                             el.HasAttribute("class") &&
+            //                                             el.GetAttribute("class").StartsWith("List") &&
+            //                                             el.Children.Any(chEl => chEl.LocalName == "div" &&
+            //                                             chEl.HasAttribute("class") &&
+            //                                             chEl.GetAttribute("class").StartsWith("id")));
+            var result = nodeWithName.ToList();
 
             return result;
         }

@@ -27,8 +27,8 @@ namespace PageParser
             var childNodes = await customParser.GetChildCarNodes(allParentDivs[1]);
 
             await customParser.CreateCarEntitysFromParentNode(childNodes[0]);
-            
 
+            
 
             Console.ReadKey();
         }
