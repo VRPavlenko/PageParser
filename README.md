@@ -39,7 +39,7 @@ Notes:
 
 #### Solution:
 
-1. get the content string from the page.
+1. Get the content string from the page.
 ```c#
 public string GetPageStrContent(string url)
         {
@@ -70,7 +70,7 @@ public async Task<IDocument> CreateDataDocument(string content)
         }
 ```
 
-3. Get list "parent" nodes from the received documet.
+3. Get list "parent" nodes from the received documet. We get a node from the html document, which: has a node with the class name List, and inside there is a node with the class name Header.
 ```c#
 public List<IElement> GetParentCarDivElementsList(IDocument document)
         {
@@ -83,4 +83,15 @@ public List<IElement> GetParentCarDivElementsList(IDocument document)
             return parenNodes.ToList();
         }
 ```
-
+4. Create class CarEntity. At the moment, the fields are implemented only for the first layer of the site.
+```c#
+public class CarEntity
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public List<string> Codes { get; set; }
+        public DateTime? StartDate { get; set; }
+        public DateTime? FinishDate { get; set; }
+        public string SecondLayerDataUrl { get; set; }
+    }
+```
