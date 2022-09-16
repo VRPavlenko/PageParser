@@ -72,13 +72,13 @@ namespace PageParser.SiteParser
         /// </summary>
         public List<IElement> GetParentCarDivElementsList(IDocument document)
         {
-            var elements = document.All.Where(el => el.LocalName == "div" &&
+            var parenNodes = document.All.Where(el => el.LocalName == "div" &&
                                                 el.HasAttribute("class") &&
                                                 el.GetAttribute("class").StartsWith("List") &&
                                                 el.Children.Any(chEl => chEl.LocalName == "div" &&
                                                 chEl.HasAttribute("class") &&
                                                 chEl.GetAttribute("class").StartsWith("Header")));
-            return elements.ToList();
+            return parenNodes.ToList();
         }
 
         /// <summary>
@@ -131,7 +131,9 @@ namespace PageParser.SiteParser
             return carEntities;
         }
 
-
+        /// <summary>
+        /// Возвращает URL из дочернего елемента
+        /// </summary>
         public async Task<string> GetSecondLvlUrl(IElement childElement)
         {
             var childNode = await GetDocumentFromElement(childElement);
@@ -140,22 +142,16 @@ namespace PageParser.SiteParser
                                 el.GetAttribute("class").StartsWith("id") &&
                                 el.Children.Any(chEl => chEl.LocalName == "a" &&
                                 chEl.HasAttribute("href"))).FirstOrDefault();
+
             var strNode = nodeWithURL.InnerHtml;
 
             strNode = strNode.Split("f=\"")[1];
             strNode = strNode.Split("\" t")[0];
 
-            /*
-            foreach(char ch in strNode)
-            {
-                bool match
-                
-            }
-            */
-
 
             return "https://www.ilcats.ru/" + strNode;
         }
+
         /// <summary>
         /// Возвращаем имя из родительского елемента
         /// </summary>
