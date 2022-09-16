@@ -1,6 +1,6 @@
 # Page Parser. C# say'so "Help me"
 
-This project was created on a test task. Challenge: [site](https://www.ilcats.ru/toyota/?function=getModels&market=EU) parsing and entering data into SQL db. The project uses: Entity Framework, AngleSharp. The solution will be divided into several projects: Parsing part and database part.
+Challenge: [site](https://www.ilcats.ru/toyota/?function=getModels&market=EU) parsing and entering data into SQL db. The project uses: Entity Framework, AngleSharp. The solution will be divided into several projects: Parsing part and database part.
 
 
 ## Parsing part
@@ -36,4 +36,51 @@ Problems:
 Notes:
 - The "parent" word will refer to the entire structure presented above.
 - The "children" word will refer to the list of models inside the parent.
+
+#### Solution:
+
+1. get the content string from the page.
+```c#
+public string GetPageStrContent(string url)
+        {
+            var resultStr = "";
+            var webRequest = WebRequest.Create(url);
+
+            using (var response = webRequest.GetResponse())
+            using (var content = response.GetResponseStream())
+            using (var reader = new StreamReader(content))
+            {
+                resultStr = reader.ReadToEnd();
+            }
+
+            return resultStr;
+        }
+```
+2. Formatting an html string into an IDocument type.
+```c#
+public async Task<IDocument> CreateDataDocument(string content)
+        {
+            IConfiguration config = Configuration.Default;
+
+            IBrowsingContext context = BrowsingContext.New(config);
+
+            IDocument document = await context.OpenAsync(req => req.Content(content));
+
+            return document;
+        }
+```
+
+3. Get list "parent" nodes from the received documet.
+```c#
+public List<IElement> GetParentCarDivElementsList(IDocument document)
+        {
+            var parenNodes = document.All.Where(el => el.LocalName == "div" &&
+                                                el.HasAttribute("class") &&
+                                                el.GetAttribute("class").StartsWith("List") &&
+                                                el.Children.Any(chEl => chEl.LocalName == "div" &&
+                                                chEl.HasAttribute("class") &&
+                                                chEl.GetAttribute("class").StartsWith("Header")));
+            return parenNodes.ToList();
+        }
+```
 
