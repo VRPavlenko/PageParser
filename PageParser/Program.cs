@@ -23,8 +23,6 @@ namespace PageParser
 
             var document = await customParser.CreateDataDocument(strContent);
 
-            //customParser.GetFirstLayerCarsData(document);
-
             var allParentDivs = customParser.GetParentCarDivElementsList(document);
 
             List<CarEntity> allCars = new List<CarEntity>();

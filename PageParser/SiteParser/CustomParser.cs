@@ -122,7 +122,8 @@ namespace PageParser.SiteParser
 
                 carEntity.Id = await GetModelId(el); //get model Id
 
-                carEntity = await GetModelDataToCarEntity(carEntity, el); // get model data
+                carEntity.StartDate = (await GetModelStartDateAndFinishDateInArr(el))[0]; // get model start date
+                carEntity.FinishDate = (await GetModelStartDateAndFinishDateInArr(el))[1]; // get model finish date
 
                 carEntity.SecondLayerDataUrl = await GetSecondLvlUrl(el);
 
@@ -184,9 +185,9 @@ namespace PageParser.SiteParser
         }
 
         /// <summary>
-        /// Возвращает обьект carEntity с отредатированной датой старта и финиша
+        /// Возвращает массив, где первый елемент -- startDate, а второй -- finishDate
         /// </summary>
-        public async Task<CarEntity> GetModelDataToCarEntity(CarEntity car, IElement childElement)
+        public async Task<DateTime?[]> GetModelStartDateAndFinishDateInArr(IElement childElement)
         {
             var childNode = await GetDocumentFromElement(childElement);
             var nodeWithData = childNode.All.Where(el => el.LocalName == "div" &&
@@ -195,23 +196,21 @@ namespace PageParser.SiteParser
 
             var strData = nodeWithData.InnerHtml;
             strData = strData.Replace("&nbsp;", " ");
-            var dataStrList = strData.Split(" - ");
-            List<DateTime?> dataTimeList = new List<DateTime?>();
-            foreach(string data in dataStrList)
+            var dateStrList = strData.Split(" - ");
+            List<DateTime?> dateTimeList = new List<DateTime?>();
+            foreach(string data in dateStrList)
             {
                 if (data != "   ...   ")
                 {
                     var date = Convert.ToDateTime(data.Replace(".", "/"));
-                    dataTimeList.Add(date);
+                    dateTimeList.Add(date);
                 }
                 else
-                    dataTimeList.Add(null);
+                    dateTimeList.Add(null);
             }
 
-            car.StartDate = dataTimeList[0];
-            car.FinishDate = dataTimeList[1];
-
-            return car;
+            var result = dateTimeList.ToArray();
+            return result;
         }
 
         /// <summary>
