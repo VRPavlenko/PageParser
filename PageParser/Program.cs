@@ -6,7 +6,7 @@ using System.Net;
 using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Html.Parser;
-using PageParser.Models;
+using PageParser.Entities;
 using PageParser.SiteParser;
 
 namespace PageParser

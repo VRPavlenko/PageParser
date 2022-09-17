@@ -6,7 +6,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using AngleSharp;
-using PageParser.Models;
+using PageParser.Entities;
 using AngleSharp.Dom;
 using System.Linq;
 
@@ -25,6 +25,8 @@ namespace PageParser.SiteParser
         public string HomePageStrContent { get => homePageStrContent; set => homePageStrContent = value; }
         public List<CarEntity> CarsData;
         public List<string> HrefList;
+        public List<string> SecondLayerUrlList;
+
         #endregion Properties
 
         public CustomParser()
@@ -32,9 +34,11 @@ namespace PageParser.SiteParser
             Config = new Config();
             CarsData = new List<CarEntity>();
             HrefList = new List<string>();
+            SecondLayerUrlList = new List<string>();
         }
 
-        #region Methods
+
+        #region UniversalMethods
         /// <summary>
         /// Получает cтроковый контент из html страницы используя её адрес.
         /// </summary>
@@ -67,6 +71,9 @@ namespace PageParser.SiteParser
             return document;
         }
 
+        #endregion UniversalMethods
+
+        #region FirstLvlMethods
         /// <summary>
         /// Получает все родительские html элементы с домашней страницы, которые содержат данные и ссылку на варианты модели машины.
         /// </summary>
@@ -122,10 +129,12 @@ namespace PageParser.SiteParser
 
                 carEntity.Id = await GetModelId(el); //get model Id
 
-                carEntity.StartDate = (await GetModelStartDateAndFinishDateInArr(el))[0]; // get model start date
-                carEntity.FinishDate = (await GetModelStartDateAndFinishDateInArr(el))[1]; // get model finish date
+                DateTime? start, finish;
+                GetModelStartDateAndFinishDate(el, out start, out finish); // get model start date
+                carEntity.StartDate = start;
+                carEntity.FinishDate = finish;
 
-                carEntity.SecondLayerDataUrl = await GetSecondLvlUrl(el);
+                carEntity.SecondLayerDataUrl = await GetSecondLvlUrl(el); // get url second lvl
 
                 carEntities.Add(carEntity);
             }
@@ -185,11 +194,11 @@ namespace PageParser.SiteParser
         }
 
         /// <summary>
-        /// Возвращает массив, где первый елемент -- startDate, а второй -- finishDate
+        /// возвращает начальную и конечную дату выпуска определенного автомобиля 
         /// </summary>
-        public async Task<DateTime?[]> GetModelStartDateAndFinishDateInArr(IElement childElement)
+        public void GetModelStartDateAndFinishDate(IElement childElement, out DateTime? startDate, out DateTime? endDate)
         {
-            var childNode = await GetDocumentFromElement(childElement);
+            var childNode = GetDocumentFromElement(childElement).Result;
             var nodeWithData = childNode.All.Where(el => el.LocalName == "div" &&
                                 el.HasAttribute("class") &&
                                 el.GetAttribute("class").StartsWith("dateRange")).FirstOrDefault();
@@ -210,7 +219,8 @@ namespace PageParser.SiteParser
             }
 
             var result = dateTimeList.ToArray();
-            return result;
+            startDate = result[0];
+            endDate = result[1];
         }
 
         /// <summary>
@@ -239,6 +249,11 @@ namespace PageParser.SiteParser
             return await CreateDataDocument(strContent);
         }
 
-        #endregion Methods
+        #endregion FirstLvlMethods
+
+        #region SecondLvlMethods
+        
+
+        #endregion SecondLvlMethods
     }
 }
