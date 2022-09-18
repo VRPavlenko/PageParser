@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Text.RegularExpressions;
-using AngleSharp.Html.Parser;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -34,49 +32,7 @@ namespace PageParser.SiteParser
         }
 
 
-        #region UtilityMethods
-        /// <summary>
-        /// Получает cтроковый контент из html страницы используя её адрес.
-        /// </summary>
-        private string GetPageStrContent(string url)
-        {
-            var resultStr = "";
-            var webRequest = WebRequest.Create(url);
-
-            using (var response = webRequest.GetResponse())
-            using (var content = response.GetResponseStream())
-            using (var reader = new StreamReader(content))
-            {
-                resultStr = reader.ReadToEnd();
-            }
-
-            return resultStr;
-        }
-
-        /// <summary>
-        /// Создает объект типа IDocument из контента html страницы.
-        /// </summary>
-        public async Task<IDocument> CreateDataDocument(string content)
-        {
-            IConfiguration config = Configuration.Default;
-
-            IBrowsingContext context = BrowsingContext.New(config);
-
-            IDocument document = await context.OpenAsync(req => req.Content(content));
-
-            return document;
-        }
-
-        /// <summary>
-        /// Возвращает тип документ из типа елемент
-        /// </summary>
-        private async Task<IDocument> GetDocumentFromElement(IElement element)
-        {
-            var strContent = element.ToHtml();
-
-            return await CreateDataDocument(strContent);
-        }
-        #endregion UtilityMethods
+        
 
         #region FirstLvlMethods
         /// <summary>
@@ -208,28 +164,31 @@ namespace PageParser.SiteParser
         public void GetModelStartDateAndFinishDate(IElement childElement, out DateTime? startDate, out DateTime? endDate)
         {
             var childNode = GetDocumentFromElement(childElement).Result;
-            var nodeWithData = childNode.All.Where(el => el.LocalName == "div" &&
+            var nodeWithDate = childNode.All.Where(el => el.LocalName == "div" &&
                                 el.HasAttribute("class") &&
                                 el.GetAttribute("class").StartsWith("dateRange")).FirstOrDefault();
 
-            var strData = nodeWithData.InnerHtml;
-            strData = strData.Replace("&nbsp;", " ");
-            var dateStrList = strData.Split(" - ");
-            List<DateTime?> dateTimeList = new List<DateTime?>();
-            foreach (string data in dateStrList)
-            {
-                if (data != "   ...   ")
-                {
-                    var date = Convert.ToDateTime(data.Replace(".", "/"));
-                    dateTimeList.Add(date);
-                }
-                else
-                    dateTimeList.Add(null);
-            }
+            var strData = nodeWithDate.InnerHtml;
 
-            var result = dateTimeList.ToArray();
-            startDate = result[0];
-            endDate = result[1];
+            FormatRawStringToDate(nodeWithDate.InnerHtml, out startDate, out endDate);
+
+            //strData = strData.Replace("&nbsp;", " ");
+            //var dateStrList = strData.Split(" - ");
+            //List<DateTime?> dateTimeList = new List<DateTime?>();
+            //foreach (string data in dateStrList)
+            //{
+            //    if (data != "   ...   ")
+            //    {
+            //        var date = Convert.ToDateTime(data.Replace(".", "/"));
+            //        dateTimeList.Add(date);
+            //    }
+            //    else
+            //        dateTimeList.Add(null);
+            //}
+
+            //var result = dateTimeList.ToArray();
+            //startDate = result[0];
+            //endDate = result[1];
         }
 
         /// <summary>
@@ -253,8 +212,6 @@ namespace PageParser.SiteParser
         /// </summary>
         public async Task<List<CarEntity>> GetCarEntities()
         {
-
-
             var strContent = GetPageStrContent(Config.HomePage);
 
             var document = await CreateDataDocument(strContent);
@@ -289,35 +246,135 @@ namespace PageParser.SiteParser
         public async Task<CarEntity> GetAllComplictationsForOneCar (CarEntity car)
         {
             var strContent = GetPageStrContent(car.SecondLayerDataUrl);
-            strContent = GetComplectationTable(strContent);
+            var doc = await CreateDataDocument(strContent);
+            var complectationElements = GetComplectationTableEntryElements(doc);
 
-            var document = await CreateDataDocument(strContent);
+            List<CarComplectation> complectations = new List<CarComplectation>();
 
-            var temp = document;
+            foreach (var element in complectationElements)
+            {
+                complectations.Add(ParseComplectationData(element));
+            }
+
             return null;
         }
 
 
-        private string GetComplectationTable (string str)
+        private List<IElement> GetComplectationTableEntryElements (IDocument doc)
         {
-            //if (str == null)
-            //{
-            //    Console.WriteLine("pipirka");
-            //    return null;
-            //}
+            if (doc != null)
+            {
+                var tableComplectationEntrys = doc.All.Where(el => el.LocalName == "tr" && el.Children.Any(chEl => chEl.LocalName == "td")).ToList();
 
-            //var newStrArr = str.Split("<tbody>");
-            ////str = str.Split("</tbody>");
-
-            //var result = newStrArr[1];
+                return tableComplectationEntrys;
+            }
             
             return null;
         }
 
+        private CarComplectation ParseComplectationData(IElement element)
+        {
+            CarComplectation complectation = new CarComplectation();
 
+            var doc = GetDocumentFromElement(element).Result;
 
+            var rawDate = doc.All.Where(el => el.LocalName == "div" &&
+                                        el.HasAttribute("class") &&
+                                        el.GetAttribute("class").StartsWith("dateRange")).FirstOrDefault().InnerHtml;
 
+            DateTime? startDate;
+            DateTime? finishDate;
+
+            FormatRawStringToDate(rawDate, out startDate, out finishDate);
+
+            complectation.StartDate = startDate;
+            complectation.FinishDate = finishDate;
+
+            complectation.Engine = "";
+
+            complectation.Body = "";
+
+            complectation.Grade = "";
+
+            complectation.AtmMtm = "";
+
+            complectation.GearShiftType = "";
+
+            complectation.Cab = "";
+
+            complectation.TransmissionModel = "";
+
+            complectation.LoadingCapacity = "";
+
+            return complectation;
+        }
 
         #endregion SecondLvlMethods
+
+        #region UtilityMethods
+        /// <summary>
+        /// Получает cтроковый контент из html страницы используя её адрес.
+        /// </summary>
+        private string GetPageStrContent(string url)
+        {
+            var resultStr = "";
+            var webRequest = WebRequest.Create(url);
+
+            using (var response = webRequest.GetResponse())
+            using (var content = response.GetResponseStream())
+            using (var reader = new StreamReader(content))
+            {
+                resultStr = reader.ReadToEnd();
+            }
+
+            return resultStr;
+        }
+
+        /// <summary>
+        /// Создает объект типа IDocument из контента html страницы.
+        /// </summary>
+        public async Task<IDocument> CreateDataDocument(string content)
+        {
+            IConfiguration config = Configuration.Default;
+
+            IBrowsingContext context = BrowsingContext.New(config);
+
+            IDocument document = await context.OpenAsync(req => req.Content(content));
+
+            return document;
+        }
+
+        /// <summary>
+        /// Возвращает тип документ из типа елемент
+        /// </summary>
+        private async Task<IDocument> GetDocumentFromElement(IElement element)
+        {
+            var strContent = element.ToHtml();
+
+            return await CreateDataDocument(strContent);
+        }
+
+        private void FormatRawStringToDate(string strDate, out DateTime? startDate, out DateTime? endDate)
+        {
+            strDate = strDate.Replace("&nbsp;", " ");
+            var dateStrList = strDate.Split(" - ");
+            List<DateTime?> dateTimeList = new List<DateTime?>();
+            foreach (string data in dateStrList)
+            {
+                if (data != "   ...   ")
+                {
+                    var date = Convert.ToDateTime(data.Replace(".", "/"));
+                    dateTimeList.Add(date);
+                }
+                else
+                    dateTimeList.Add(null);
+            }
+
+            var result = dateTimeList.ToArray();
+            startDate = result[0];
+            endDate = result[1];
+        }
+
+        #endregion UtilityMethods
     }
 }
