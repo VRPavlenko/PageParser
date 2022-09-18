@@ -20,7 +20,7 @@ namespace PageParser.Entity
 
         #region 2st lvl Data
 
-        List<CarComplectation> CarComplectations { get; set; }
+        public List<CarComplectation> CarComplectations { get; set; }
 
         #endregion 2st lvl Data
     }

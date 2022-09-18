@@ -24,7 +24,6 @@ namespace PageParser.SiteParser
 
         public string HomePageStrContent { get => homePageStrContent; set => homePageStrContent = value; }
         public List<CarEntity> CarsEntities;
-        public List<string> SecondLayerUrlList;
 
         #endregion Properties
 
@@ -32,7 +31,6 @@ namespace PageParser.SiteParser
         {
             Config = new Config();
             CarsEntities = new List<CarEntity>();
-            SecondLayerUrlList = new List<string>();
         }
 
 
@@ -128,7 +126,10 @@ namespace PageParser.SiteParser
 
             foreach (IElement el in childrenNodes)
             {
+
                 var carEntity = new CarEntity();
+
+                carEntity.CarComplectations = new List<CarComplectation>();
 
                 carEntity.Name = await GetModelName(parentElement); // get model name
 
@@ -252,6 +253,8 @@ namespace PageParser.SiteParser
         /// </summary>
         public async Task<List<CarEntity>> GetCarEntities()
         {
+
+
             var strContent = GetPageStrContent(Config.HomePage);
 
             var document = await CreateDataDocument(strContent);
@@ -295,11 +298,20 @@ namespace PageParser.SiteParser
         }
 
 
-        private string GetComplectationTable (string doc)
+        private string GetComplectationTable (string str)
         {
-            doc = doc.Split("<tbody>")[1];
-            doc = doc.Split("</tbody>")[0];
-            return doc;
+            //if (str == null)
+            //{
+            //    Console.WriteLine("pipirka");
+            //    return null;
+            //}
+
+            //var newStrArr = str.Split("<tbody>");
+            ////str = str.Split("</tbody>");
+
+            //var result = newStrArr[1];
+            
+            return null;
         }
 
 
