@@ -19,7 +19,7 @@ namespace PageParser
 
             var carsEntities = await parser.GetCarEntities();
 
-            
+            var temp = parser.GetAllComplictationsForOneCar(carsEntities[0]);
 
             Console.ReadKey();
         }

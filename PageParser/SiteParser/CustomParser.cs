@@ -214,7 +214,7 @@ namespace PageParser.SiteParser
             strData = strData.Replace("&nbsp;", " ");
             var dateStrList = strData.Split(" - ");
             List<DateTime?> dateTimeList = new List<DateTime?>();
-            foreach(string data in dateStrList)
+            foreach (string data in dateStrList)
             {
                 if (data != "   ...   ")
                 {
@@ -271,27 +271,33 @@ namespace PageParser.SiteParser
 
         #region SecondLvlMethods
 
-        public async void GetCarComplictationsIntoAllCars()
+        public async Task GetCarComplictationsIntoAllCars()
         {
             var allCars = await GetCarEntities();
             foreach (CarEntity car in allCars)
             {
 
-                var strContent = GetPageStrContent(car.SecondLayerDataUrl);
-                strContent = GetDesiredTableFromStrSecondLvlContent(strContent);
-                var document = await CreateDataDocument(strContent);
-
-
+                var tempComple = GetAllComplictationsForOneCar(car);
 
             }
         }
 
-
-        private string GetDesiredTableFromStrSecondLvlContent(string str)
+        public async Task<CarEntity> GetAllComplictationsForOneCar (CarEntity car)
         {
-            str = str.Split("brand=\"Toyota\"><tbody>")[1];
-            str = str.Split("</tbody>")[0];
-            return str;
+            var strContent = GetPageStrContent(car.SecondLayerDataUrl);
+            var document = await CreateDataDocument(strContent);
+            var parentNode = GetParentNodeInSecondLayer(document);
+            return null;
+        }
+
+        private async Task<IElement> GetParentNodeInSecondLayer(IDocument document)
+        {
+            var parenNodes = document.All.Where(el => el.LocalName == "tbody" &&
+                                                el.Children.Any(chEl => chEl.LocalName == "div" &&
+                                                chEl.HasAttribute("class") &&
+                                                chEl.GetAttribute("class").StartsWith("modelCode")));
+
+            return null;
         }
 
 
