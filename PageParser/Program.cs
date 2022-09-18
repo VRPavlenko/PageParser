@@ -6,7 +6,7 @@ using System.Net;
 using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Html.Parser;
-using PageParser.Entities;
+using PageParser.Entity;
 using PageParser.SiteParser;
 
 namespace PageParser
@@ -29,7 +29,7 @@ namespace PageParser
             
             foreach(var pn in allParentDivs)
             {
-                allCars.AddRange(await customParser.CreateCarEntitysFromParentNode(pn));
+                allCars.AddRange(await customParser.CreateCarEntitysFromSingleNode(pn));
             }
 
             

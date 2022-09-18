@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PageParser.Entities
+namespace PageParser.Entity
 {
     public class CarEntity
     {
@@ -20,7 +20,7 @@ namespace PageParser.Entities
 
         #region 2st lvl Data
 
-        List<CarComplectation>
+        List<CarComplectation> CarComplectations { get; set; }
 
         #endregion 2st lvl Data
     }

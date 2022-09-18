@@ -6,7 +6,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using AngleSharp;
-using PageParser.Entities;
+using PageParser.Entity;
 using AngleSharp.Dom;
 using System.Linq;
 
@@ -23,8 +23,7 @@ namespace PageParser.SiteParser
         public Config Config { get => config; set => config = value; }
 
         public string HomePageStrContent { get => homePageStrContent; set => homePageStrContent = value; }
-        public List<CarEntity> CarsData;
-        public List<string> HrefList;
+        public List<CarEntity> CarsEntities;
         public List<string> SecondLayerUrlList;
 
         #endregion Properties
@@ -32,17 +31,16 @@ namespace PageParser.SiteParser
         public CustomParser()
         {
             Config = new Config();
-            CarsData = new List<CarEntity>();
-            HrefList = new List<string>();
+            CarsEntities = new List<CarEntity>();
             SecondLayerUrlList = new List<string>();
         }
 
 
-        #region UniversalMethods
+        #region UtilityMethods
         /// <summary>
         /// Получает cтроковый контент из html страницы используя её адрес.
         /// </summary>
-        public string GetPageStrContent(string url)
+        private string GetPageStrContent(string url)
         {
             var resultStr = "";
             var webRequest = WebRequest.Create(url);
@@ -71,7 +69,16 @@ namespace PageParser.SiteParser
             return document;
         }
 
-        #endregion UniversalMethods
+        /// <summary>
+        /// Возвращает тип документ из типа елемент
+        /// </summary>
+        private async Task<IDocument> GetDocumentFromElement(IElement element)
+        {
+            var strContent = element.ToHtml();
+
+            return await CreateDataDocument(strContent);
+        }
+        #endregion UtilityMethods
 
         #region FirstLvlMethods
         /// <summary>
@@ -108,7 +115,7 @@ namespace PageParser.SiteParser
         /// <summary>
         /// Создает список обьектов CarEntity из родительского елемента
         /// </summary>
-        public async Task<List<CarEntity>> CreateCarEntitysFromParentNode(IElement parentElement)
+        public async Task<List<CarEntity>> CreateCarEntitysFromSingleNode(IElement parentElement)
         {
             //var parentNode = await GetDocumentFromElement(parentElement);
 
@@ -165,7 +172,7 @@ namespace PageParser.SiteParser
         /// <summary>
         /// Возвращаем имя из родительского елемента
         /// </summary>
-            public async Task<string> GetModelId(IElement childElement)
+        public async Task<string> GetModelId(IElement childElement)
         {
             var childNode = await GetDocumentFromElement(childElement);
             var nodeWithName = childNode.All.Where(el => el.LocalName == "div" &&
@@ -240,19 +247,39 @@ namespace PageParser.SiteParser
         }
 
         /// <summary>
-        /// Возвращает тип документ из типа елемент
+        /// Метод создает список машин с первого слоя сайта
         /// </summary>
-        private async Task<IDocument> GetDocumentFromElement(IElement element)
+        public async Task<List<CarEntity>> GetCarEntities()
         {
-            var strContent = element.ToHtml();
+            var strContent = GetPageStrContent(Config.HomePage);
 
-            return await CreateDataDocument(strContent);
+            var document = await CreateDataDocument(strContent);
+
+            var allParentDivs = GetParentCarDivElementsList(document);
+
+            List<CarEntity> allCars = new List<CarEntity>();
+
+            foreach (var pn in allParentDivs)
+            {
+                allCars.AddRange(await CreateCarEntitysFromSingleNode(pn));
+            }
+
+            return allCars;
         }
 
         #endregion FirstLvlMethods
 
         #region SecondLvlMethods
-        
+
+        public async void GetCarComplictationsIntoAllCars()
+        {
+            var allCars = await GetCarEntities();
+            foreach (CarEntity car in allCars)
+            {
+                var document = GetPageStrContent(car.SecondLayerDataUrl);
+
+            }
+        }
 
         #endregion SecondLvlMethods
     }
