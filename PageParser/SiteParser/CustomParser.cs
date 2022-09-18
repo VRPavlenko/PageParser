@@ -165,6 +165,7 @@ namespace PageParser.SiteParser
             strNode = strNode.Split("f=\"")[1];
             strNode = strNode.Split("\" t")[0];
 
+            strNode = strNode.Replace("amp;", "");
 
             return "https://www.ilcats.ru/" + strNode;
         }
@@ -285,20 +286,23 @@ namespace PageParser.SiteParser
         public async Task<CarEntity> GetAllComplictationsForOneCar (CarEntity car)
         {
             var strContent = GetPageStrContent(car.SecondLayerDataUrl);
+            strContent = GetComplectationTable(strContent);
+
             var document = await CreateDataDocument(strContent);
-            var parentNode = GetParentNodeInSecondLayer(document);
+
+            var temp = document;
             return null;
         }
 
-        private async Task<IElement> GetParentNodeInSecondLayer(IDocument document)
+
+        private string GetComplectationTable (string doc)
         {
-            var parenNodes = document.All.Where(el => el.LocalName == "tbody" &&
-                                                el.Children.Any(chEl => chEl.LocalName == "div" &&
-                                                chEl.HasAttribute("class") &&
-                                                chEl.GetAttribute("class").StartsWith("modelCode")));
-
-            return null;
+            doc = doc.Split("<tbody>")[1];
+            doc = doc.Split("</tbody>")[0];
+            return doc;
         }
+
+
 
 
 
