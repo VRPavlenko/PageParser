@@ -276,10 +276,25 @@ namespace PageParser.SiteParser
             var allCars = await GetCarEntities();
             foreach (CarEntity car in allCars)
             {
-                var document = GetPageStrContent(car.SecondLayerDataUrl);
+
+                var strContent = GetPageStrContent(car.SecondLayerDataUrl);
+                strContent = GetDesiredTableFromStrSecondLvlContent(strContent);
+                var document = await CreateDataDocument(strContent);
+
+
 
             }
         }
+
+
+        private string GetDesiredTableFromStrSecondLvlContent(string str)
+        {
+            str = str.Split("brand=\"Toyota\"><tbody>")[1];
+            str = str.Split("</tbody>")[0];
+            return str;
+        }
+
+
 
         #endregion SecondLvlMethods
     }

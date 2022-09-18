@@ -15,22 +15,9 @@ namespace PageParser
     {
         static async Task Main(string[] args)
         {
-            string strContent = "";
+            CustomParser parser = new CustomParser();
 
-            CustomParser customParser = new CustomParser();
-
-            strContent = customParser.GetPageStrContent(customParser.Config.HomePage);
-
-            var document = await customParser.CreateDataDocument(strContent);
-
-            var allParentDivs = customParser.GetParentCarDivElementsList(document);
-
-            List<CarEntity> allCars = new List<CarEntity>();
-            
-            foreach(var pn in allParentDivs)
-            {
-                allCars.AddRange(await customParser.CreateCarEntitysFromSingleNode(pn));
-            }
+            var carsEntities = await parser.GetCarEntities();
 
             
 
