@@ -21,12 +21,14 @@ namespace PageParser
 
             var temp = new CarEntity();
 
-            if (carsEntities[50] != null && carsEntities.Count > 0)
-            {
-                temp = await parser.GetAllComplictationsForOneCar(carsEntities[50]);
-            }
+            //if (carsEntities[50] != null && carsEntities.Count > 0)
+            //{
+            //    temp = await parser.GetAllComplictationsForOneCar(carsEntities[50]);
+            //}
 
-            
+            var allDataCars = parser.GetCarComplictationsIntoAllCars();
+
+
 
             Console.ReadKey();
         }

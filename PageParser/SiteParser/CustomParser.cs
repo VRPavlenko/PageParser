@@ -232,18 +232,21 @@ namespace PageParser.SiteParser
 
         #region SecondLvlMethods
 
-        public async Task GetCarComplictationsIntoAllCars()
+        public async Task<List<CarEntity>> GetCarComplictationsIntoAllCars()
         {
             var allCars = await GetCarEntities();
             foreach (CarEntity car in allCars)
             {
 
-                var tempComple = GetAllComplictationsForOneCar(car);
-
+                car.CarComplectations = await GetAllComplictationsForOneCar(car);
             }
+            return allCars;
         }
 
-        public async Task<CarEntity> GetAllComplictationsForOneCar (CarEntity car)
+        /// <summary>
+        /// Возвращает все комплектации одной модели машины
+        /// </summary>
+        public async Task<List<CarComplectation>> GetAllComplictationsForOneCar (CarEntity car)
         {
             var strContent = GetPageStrContent(car.SecondLayerDataUrl);
             var doc = await CreateDataDocument(strContent);
@@ -251,29 +254,34 @@ namespace PageParser.SiteParser
 
             List<CarComplectation> complectations = new List<CarComplectation>();
 
-            complectations.Add(ParseComplectationData(complectationElements[0]));
+            foreach (var element in complectationElements)
+            {
+                complectations.Add(ParseComplectationData(element));
+            }
 
-            //foreach (var element in complectationElements)
-            //{
-            //    complectations.Add(ParseComplectationData(element));
-            //}
-
-            return null;
+            return complectations;
         }
 
-
+        /// <summary>
+        /// Возвращает список нод tr
+        /// </summary>
         private List<IElement> GetComplectationTableEntryElements (IDocument doc)
         {
             if (doc != null)
             {
-                var tableComplectationEntrys = doc.All.Where(el => el.LocalName == "tr" && el.Children.Any(chEl => chEl.LocalName == "td")).ToList();
+                var tableComplectationEntrys = doc.All.Where(el => el.LocalName == "tr" &&
+                                                            el.Children.Any(chEl => chEl.LocalName == "td")).ToList();
 
                 return tableComplectationEntrys;
             }
             
             return null;
         }
-
+        /// <summary>
+        /// Возвращает обьект со всеми заполнеными полями
+        /// </summary>
+        /// <param name="element">is tr element</param>
+        /// <returns></returns>
         private CarComplectation ParseComplectationData(IElement element)
         {
             CarComplectation complectation = new CarComplectation();
@@ -293,38 +301,50 @@ namespace PageParser.SiteParser
 
             complectation.Engine = GetStringFromTableCellBySelector(doc, "01");
 
-            complectation.Body = GetStringFromTableCellBySelector(doc, "03");
-
-            complectation.Grade = GetStringFromTableCellBySelector(doc, "04");
-
-            complectation.AtmMtm = GetStringFromTableCellBySelector(doc, "05");
-
-            complectation.GearShiftType = GetStringFromTableCellBySelector(doc, "06");
-
-            complectation.Cab = GetStringFromTableCellBySelector(doc, "07");
-
-            complectation.TransmissionModel = GetStringFromTableCellBySelector(doc, "08");
-
-            complectation.LoadingCapacity = GetStringFromTableCellBySelector(doc, "09");
-
             return complectation;
         }
 
-        //PredicateBuilder is needed
-        //Details here: https://stackoverflow.com/questions/29538788/how-to-add-a-condition-to-existing-lambda-expression
-        private string GetStringFromTableCellBySelector(IDocument doc, string filter) 
+        /// <summary>
+        /// Возвращает нужную конфигурацию определенной модели
+        /// </summary>
+        /// <param name="doc">получает ноду tr</param>
+        /// <returns></returns>
+        private string GetStringFromTableCellBySelector(IDocument doc, string filter)
         {
-            Predicate<IElement> predicate = el => el.LocalName == "div" &&
+            if (doc is null)
+            {
+                throw new ArgumentNullException(nameof(doc));
+            }
+
+            
+
+            if (filter == "modelCode")
+            {
+                Func<IElement, bool> modelCodeFunc = el => el.LocalName == "div" &&
                                         el.HasAttribute("class") &&
-                                        el.GetAttribute("class").StartsWith(filter);
+                                        el.GetAttribute("class").Contains(filter) &&
+                                        el.Children.Any(chEl => chEl.LocalName == "a");
 
-            //if (filter == "modelCode")
-            //{
-            //    querry.
-            //    return str.InnerHtml;
-            //}
+                var docAll = doc.All.Where(modelCodeFunc).FirstOrDefault();
 
-            return null;
+                if (docAll == null)
+                    return null;
+                else
+                    return docAll.InnerHtml;
+            }
+            else
+            {
+                Func<IElement, bool> funk = el => el.LocalName == "div" &&
+                                        el.HasAttribute("class") &&
+                                        el.GetAttribute("class").Contains(filter);
+
+                var tempRes = doc.All.Where(funk).FirstOrDefault();
+
+                if (tempRes != null)
+                    return tempRes.InnerHtml;
+                else
+                    return null;
+            }
         }
 
         #endregion SecondLvlMethods
@@ -374,6 +394,13 @@ namespace PageParser.SiteParser
 
         private void FormatRawStringToDate(string strDate, out DateTime? startDate, out DateTime? endDate)
         {
+            if (strDate is null)
+            {
+                startDate = null;
+                endDate = null;
+                return;
+            }
+
             strDate = strDate.Replace("&nbsp;", " ");
             var dateStrList = strDate.Split(" - ");
             List<DateTime?> dateTimeList = new List<DateTime?>();
