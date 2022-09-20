@@ -251,10 +251,12 @@ namespace PageParser.SiteParser
 
             List<CarComplectation> complectations = new List<CarComplectation>();
 
-            foreach (var element in complectationElements)
-            {
-                complectations.Add(ParseComplectationData(element));
-            }
+            complectations.Add(ParseComplectationData(complectationElements[0]));
+
+            //foreach (var element in complectationElements)
+            //{
+            //    complectations.Add(ParseComplectationData(element));
+            //}
 
             return null;
         }
@@ -278,35 +280,51 @@ namespace PageParser.SiteParser
 
             var doc = GetDocumentFromElement(element).Result;
 
-            var rawDate = doc.All.Where(el => el.LocalName == "div" &&
-                                        el.HasAttribute("class") &&
-                                        el.GetAttribute("class").StartsWith("dateRange")).FirstOrDefault().InnerHtml;
+            complectation.ModelCode = GetStringFromTableCellBySelector(doc, "modelCode");
 
             DateTime? startDate;
             DateTime? finishDate;
 
+            var rawDate = GetStringFromTableCellBySelector(doc, "dateRange");
             FormatRawStringToDate(rawDate, out startDate, out finishDate);
 
             complectation.StartDate = startDate;
             complectation.FinishDate = finishDate;
 
-            complectation.Engine = "";
+            complectation.Engine = GetStringFromTableCellBySelector(doc, "01");
 
-            complectation.Body = "";
+            complectation.Body = GetStringFromTableCellBySelector(doc, "03");
 
-            complectation.Grade = "";
+            complectation.Grade = GetStringFromTableCellBySelector(doc, "04");
 
-            complectation.AtmMtm = "";
+            complectation.AtmMtm = GetStringFromTableCellBySelector(doc, "05");
 
-            complectation.GearShiftType = "";
+            complectation.GearShiftType = GetStringFromTableCellBySelector(doc, "06");
 
-            complectation.Cab = "";
+            complectation.Cab = GetStringFromTableCellBySelector(doc, "07");
 
-            complectation.TransmissionModel = "";
+            complectation.TransmissionModel = GetStringFromTableCellBySelector(doc, "08");
 
-            complectation.LoadingCapacity = "";
+            complectation.LoadingCapacity = GetStringFromTableCellBySelector(doc, "09");
 
             return complectation;
+        }
+
+        //PredicateBuilder is needed
+        //Details here: https://stackoverflow.com/questions/29538788/how-to-add-a-condition-to-existing-lambda-expression
+        private string GetStringFromTableCellBySelector(IDocument doc, string filter) 
+        {
+            Predicate<IElement> predicate = el => el.LocalName == "div" &&
+                                        el.HasAttribute("class") &&
+                                        el.GetAttribute("class").StartsWith(filter);
+
+            //if (filter == "modelCode")
+            //{
+            //    querry.
+            //    return str.InnerHtml;
+            //}
+
+            return null;
         }
 
         #endregion SecondLvlMethods

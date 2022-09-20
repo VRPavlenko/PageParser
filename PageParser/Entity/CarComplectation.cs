@@ -22,5 +22,6 @@ namespace PageParser.Entity
         public string Destination { get; set; }
         public string FuelInduction { get; set; }
         public string BuildingCondition { get; set; }
+        public string ModelCode { get; set; }
     }
 }
