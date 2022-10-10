@@ -6,7 +6,7 @@ using System.Net;
 using System.Threading.Tasks;
 using AngleSharp;
 using AngleSharp.Html.Parser;
-using PageParser.Models;
+using PageParser.Entity;
 using PageParser.SiteParser;
 
 namespace PageParser
@@ -15,26 +15,20 @@ namespace PageParser
     {
         static async Task Main(string[] args)
         {
-            string strContent = "";
+            CustomParser parser = new CustomParser();
 
-            CustomParser customParser = new CustomParser();
+            var carsEntities = await parser.GetCarEntities();
 
-            strContent = customParser.GetPageStrContent(customParser.Config.HomePage);
+            var temp = new CarEntity();
 
-            var document = await customParser.CreateDataDocument(strContent);
+            //if (carsEntities[50] != null && carsEntities.Count > 0)
+            //{
+            //    temp = await parser.GetAllComplictationsForOneCar(carsEntities[50]);
+            //}
 
-            //customParser.GetFirstLayerCarsData(document);
+            var allDataCars = parser.GetCarComplictationsIntoAllCars();
 
-            var allParentDivs = customParser.GetParentCarDivElementsList(document);
 
-            List<CarEntity> allCars = new List<CarEntity>();
-            
-            foreach(var pn in allParentDivs)
-            {
-                allCars.AddRange(await customParser.CreateCarEntitysFromParentNode(pn));
-            }
-
-            
 
             Console.ReadKey();
         }

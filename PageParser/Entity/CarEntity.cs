@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace PageParser.Models
+namespace PageParser.Entity
 {
     public class CarEntity
     {
@@ -19,6 +19,8 @@ namespace PageParser.Models
         #endregion 1st lvl Data
 
         #region 2st lvl Data
+
+        public List<CarComplectation> CarComplectations { get; set; }
 
         #endregion 2st lvl Data
     }
